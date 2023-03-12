@@ -1,5 +1,5 @@
 const express = require('express');
-const uuidv4 = require('uuid');
+const uuid = require('uuid').v4;
 const db = require('./../db.js');
 
 const router = express.Router();
@@ -9,48 +9,51 @@ router.route('/seats').get((req, res) => {
 });
 
 router.route('/seats/:id').get((req, res) => {
-  res.json(db.seats.find((data) => data.id == req.params.id));
+  res.json(db.seats.find((seat) => seat.id === +req.params.id));
 });
 
-/*router.route('/seats/random').get((req, res) => {
+router.route('/seats/random').get((req, res) => {
   res.json(db.seats[Math.floor(Math.random() * db.seats.length)]);
-});*/
+  console.log(Math.floor(Math.random() * db.seats.length));
+});
 
 router.route('/seats').post((req, res) => {
-  const { author, text } = req.body;
-  const id = uuidv4();
-
-  const newTestimonial = {
-    id: id,
-    author: author,
-    text: text,
-  };
-
-  db.seats.push(newTestimonial);
-  res.json({ message: 'ok' });
-});
-
-router.route('/seats/:id').delete((req, res) => {
-  const element = db.seats.find((data) => data.id == req.params.id);
-  const index = db.seats.indexOf(element);
-
-  db.seats.splice(index, 1);
-  res.json({ message: 'ok' });
+  const { day, seat, client, email } = req.body;
+  const id = uuid();
+  const newSeat = { id: id, day, seat, client, email };
+  if (db.seats.some((seatCheck) => seatCheck.day == newSeat.day && seatCheck.seat == newSeat.seat)) {
+    res.json({ message: 'The slot is already taken...' });
+    res.status(409).json({ message: 'The slot is already taken...' });
+} else {
+    db.seats.push(newSeat);
+    res.json({ message: 'ok!' });
+}
 });
 
 router.route('/seats/:id').put((req, res) => {
-    const id = req.params.id;
-    const findTestimonial = db.seats.find((data) => data.id == id);
-    const index = db.seats.indexOf(findTestimonial);
-    const { author, text } = req.body;
-    const changeTestimonial = {
-      id: id,
-      author: author,
-      text: text,
-    };
-  
-    db.seats[index] = changeTestimonial;
-    res.json({ message: 'ok' });
+      const { day, seat, client, email } = req.body;
+      const id = +req.params.id;
+      const seatEdit = db.seats.find((seat) => seat.id === id);
+      seatEdit.day = day;
+      seatEdit.seat = seat;
+      seatEdit.client = client;
+      seatEdit.email = email;
+      res.json({ message: 'ok!' });
+  },
+  (err) => {
+      console.log(err);
   });
+
+  router.route('/seats/:id').delete((req, res) => {
+        const id = +req.params.id;
+        db.seats.splice(
+            db.seats.findIndex((seat) => seat.id === id),
+            1
+        );
+        res.json({ message: 'Seat deleted' });
+    },
+    (err) => {
+        console.log(err);
+    });
 
 module.exports = router;
