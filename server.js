@@ -1,3 +1,4 @@
+const mySecret = process.env['DB_PASS']
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -35,13 +36,16 @@ app.use((req, res) => {
 });
 
 const NODE_ENV = process.env.NODE_ENV;
-let dbUri = '';
+if (NODE_ENV === "production")
+  dbURI = `mongodb+srv://piotrkamecki8:${process.env.DB_PASS}@cluster0.0jrn2po.mongodb.net/NewWaveDB?retryWrites=true&w=majority`;
+else if (NODE_ENV === "test") dbURI = "mongodb://localhost:27017/NewWaveDBtest";
+else dbURI = "mongodb://localhost:27017/NewWaveDB";
 
-if (NODE_ENV === 'production') dbUri = 'mongodb+srv://piotrkamecki8:KodillaTest@cluster0.0jrn2po.mongodb.net/NewWaveDB?retryWrites=true&w=majority';
-else if (NODE_ENV === 'test') dbUri = 'mongodb://localhost:27017/NewWaveDBtest';
-else dbUri = 'mongodb://localhost:27017/NewWaveDB';
+ if (NODE_ENV === "test") dbURI = "mongodb://localhost:27017/NewWaveDBtest";
+ else if (NODE_ENV === "development") dbURI = "mongodb://localhost:27017/NewWaveDB";
+ else dbURI = `mongodb+srv://piotrkamecki8:${process.env.DB_PASS}@cluster0.0jrn2po.mongodb.net/NewWaveDB?retryWrites=true&w=majority`
 
-mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 
 db.once('open', () => {
